@@ -6,11 +6,11 @@
   <h2>📊 Sobre o Projeto</h2>
 
   <p>
-    Este é um projeto de aprendizado de máquina cujo objetivo é, a partir de uma base de dados de treino, gerar predições utilizando o melhor modelo selecionado previamente durante experimentos com o <strong>MLflow</strong>.
+    Este projeto é a continuação do FlightPriceML, onde foram realizados experimentos de aprendizado de máquina e testados diversos modelos para encontrar o melhor para a predição de preços de passagens aéreas.
   </p>
   
   <p>
-    O modelo escolhido foi o <strong>HistGradientBoostingRegressor</strong>.
+    Com base no FlightPriceML, o modelo escolhido foi o HistGradientBoostingRegressor. No FlightPriceApp, o modelo já foi treinado previamente e salvo utilizando Joblib, permitindo que a API carregue o modelo diretamente para gerar predições em arquivos enviados pelo usuário, sem necessidade de treinar novamente.
   </p>
   
   <p>
@@ -22,7 +22,7 @@
   </p>
 
   <p>
-    No front-end, é possível fazer o upload de um arquivo <code>.xlsx</code> contendo os dados de teste. O arquivo é processado no back-end, onde as predições são geradas com base no modelo previamente treinado. Após o processamento, o usuário recebe um arquivo <code>.zip</code> contendo:
+    No front-end, é possível fazer o upload de um arquivo <code>.xlsx</code> contendo os dados de teste. O arquivo é processado no back-end, onde as predições são geradas e após o processamento, o usuário recebe um arquivo <code>.zip</code> contendo:
   </p>
 
   <ul>
@@ -40,7 +40,7 @@
   1 - Clone esse repositório:
   
   ```
-  git clone https://github.com/CaioCesarMDS/FlightPrice_App.git
+  git clone https://github.com/CaioCesarMDS/FlightPriceApp.git
   ```
   
   2 - Suba os containers com Docker:
@@ -75,6 +75,8 @@
     <li>Scikit-learn</li>
     <li>FastApi</li>
     <li>Uvicorn</li>
+    <li>Joblib</li>
   </ul>
 </div>
+
 
