@@ -71,6 +71,8 @@ function App() {
 
       const blob = await response.blob();
       downloadBlob(blob, "resultado.zip");
+
+      toast.success("Arquivo gerado com sucesso!");
     } catch (err) {
       toast.error("Falha ao processar o arquivo. Verifique o formato e tente novamente.");
     } finally {
@@ -92,9 +94,7 @@ function App() {
           onSubmit={handleSubmit}
           className="bg-zinc-800 rounded-3xl shadow-xl p-10 w-full max-w-md flex flex-col gap-6"
         >
-          <Label htmlFor="fileInput" className="text-gray-300 font-medium">
-            {fileName}
-          </Label>
+          <p className="text-gray-300 font-medium">{fileName}</p>
 
           <Field>
             <Input
