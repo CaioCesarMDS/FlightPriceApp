@@ -1,6 +1,5 @@
-from src.main import main
-
 import pandas as pd
+import joblib
 import zipfile
 from io import BytesIO
 
@@ -8,6 +7,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.utils.preprocessing import preprocess
 
 app = FastAPI()
 
@@ -18,6 +18,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+model = None
+
+@app.on_event("startup")
+def load_model():
+    global model
+    model = joblib.load("models/flight_price_model.joblib")
+    print("Modelo carregado com sucesso")
 
 @app.post("/api/predict")
 async def predict(file: UploadFile = File(...)):
@@ -31,8 +39,18 @@ async def predict(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro ao ler o arquivo: {str(e)}")
 
-    predictions = main(df)
-    df["Predicted_Price"] = predictions
+    if model is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Modelo não carregado"
+        )
+
+    try:
+        predictions = predict_prices(df, model)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Erro ao gerar previsões")
+
+    df["predicted_price"] = predictions
 
     excel_buffer = BytesIO()
     df.to_excel(excel_buffer, index=False)
@@ -53,3 +71,11 @@ async def predict(file: UploadFile = File(...)):
         media_type="application/zip",
         headers={"Content-Disposition": f"attachment; filename=resultado.zip"}
     )
+
+def predict_prices(test_data: pd.DataFrame, model):
+    test_df = preprocess(test_data)
+    test_df = test_df.reindex(
+        columns=model.feature_names_in_,
+        fill_value=0
+    )
+    return model.predict(test_df)
