@@ -1,16 +1,49 @@
 import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { Plane, UploadCloud } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { FieldDescription } from "./components/ui/field";
+
+const API_URL = import.meta.env.VITE_API_URL;
+const allowedExtensions = ["xlsx"];
 
 function App() {
   const [fileName, setFileName] = useState("Nenhum arquivo selecionado");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
+
+    if (!selectedFile) {
+      setFile(null);
+      setFileName("Nenhum arquivo selecionado");
+      return;
+    }
+
+    const extension = selectedFile.name.split(".").pop()?.toLowerCase();
+
+    if (!extension || !allowedExtensions.includes(extension)) {
+      toast.error("Formato inválido. Envie um arquivo .xlsx");
+      e.target.value = "";
+      setFile(null);
+      setFileName("Nenhum arquivo selecionado");
+      return;
+    }
+
     setFile(selectedFile || null);
     setFileName(selectedFile ? selectedFile.name : "Nenhum arquivo selecionado");
   };
@@ -19,7 +52,7 @@ function App() {
     e.preventDefault();
 
     if (!file) {
-      alert("Selecione um arquivo primeiro.");
+      toast.warning("Selecione um arquivo primeiro.");
       return;
     }
 
@@ -29,7 +62,7 @@ function App() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://localhost:8000/api/predict", {
+      const response = await fetch(`${API_URL}/api/predict`, {
         method: "POST",
         body: formData,
       });
@@ -37,16 +70,9 @@ function App() {
       if (!response.ok) throw new Error("Erro ao enviar o arquivo");
 
       const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = "resultado.zip";
-      a.click();
-      window.URL.revokeObjectURL(downloadUrl);
+      downloadBlob(blob, "resultado.zip");
     } catch (err) {
-      console.error(err);
-      alert("Falha ao enviar o arquivo. Tente novamente.");
+      toast.error("Falha ao processar o arquivo. Verifique o formato e tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -60,7 +86,7 @@ function App() {
       </header>
 
       <main className="flex flex-col flex-grow justify-center items-center px-6">
-        <h2 className="text-3xl text-white mb-8 font-semibold">Treine Seu Modelo</h2>
+        <h2 className="text-3xl text-white mb-8 font-semibold">Gere previsões de preço de voos</h2>
 
         <form
           onSubmit={handleSubmit}
@@ -70,22 +96,31 @@ function App() {
             {fileName}
           </Label>
 
-          <Input
-            id="fileInput"
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileChange}
-            className="cursor-pointer text-gray-200"
-            disabled={loading}
-          />
+          <Field>
+            <Input
+              id="fileInput"
+              type="file"
+              accept=".xlsx"
+              onChange={handleFileChange}
+              className="cursor-pointer text-gray-200"
+              disabled={loading}
+            />
+            <FieldDescription>Selecione um arquivo .xlsx pra enviar</FieldDescription>
+          </Field>
 
           <Button
             type="submit"
             className="w-full flex justify-center items-center gap-2 border-2 border-blue-500 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
-            disabled={loading}
+            disabled={loading || !file}
           >
             <UploadCloud className="h-5 w-5" />
-            {loading ? "Enviando..." : "Treinar"}
+            {loading ? (
+              <>
+                <Spinner /> Processando...
+              </>
+            ) : (
+              "Gerar previsões"
+            )}
           </Button>
         </form>
       </main>
